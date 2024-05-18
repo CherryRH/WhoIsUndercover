@@ -27,7 +27,7 @@ export default class Player {
   // 被投总票数
   private allVotes: number;
 
-  constructor(deviceInfo: deviceManager.DeviceInfo, playerName: string, avatar?: number) {
+  constructor(deviceInfo?: deviceManager.DeviceInfo, playerName?: string, avatar?: number) {
     this.deviceInfo = deviceInfo ?? null;
     this.playerName = playerName ?? "";
     this.avatar = avatar ?? 0;

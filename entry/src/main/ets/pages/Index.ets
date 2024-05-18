@@ -1,10 +1,17 @@
 import { DistributedDeviceManager } from '../distributed_abilities/DistributedDeviceManager';
+import Player from '../models/player';
 
-@Entry
+let indexProp: Record<string, Player> = {
+  'LocalPlayer': new Player()
+};
+let localStorage: LocalStorage = new LocalStorage(indexProp);
+
+@Entry(localStorage)
 @Component
 struct Index {
-  @State message: string = 'Hello World';
-
+  @State message: string = '谁是卧底';
+  // 本机玩家设为全局变量
+  @LocalStorageLink('LocalPlayer') localPlayer: Player = new Player();
 
   build() {
     Column({space: 10}) {

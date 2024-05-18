@@ -33,6 +33,8 @@ export default class EntryAbility extends UIAbility {
 
     // 初始化分布式设备管理器
     DistributedDeviceManager.init();
+    // 获取本地设备信息
+    DistributedDeviceManager.getLocalDeviceInfo();
   }
 
   onDestroy(): void {

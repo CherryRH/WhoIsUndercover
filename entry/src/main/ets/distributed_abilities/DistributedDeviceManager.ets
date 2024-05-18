@@ -4,23 +4,6 @@ import { BusinessError } from '@ohos.base';
 const TAG: string = '[DistributedDeviceManagerTestTag]';
 export const BUNDLE_NAME: string = 'com.ohapp.whoisundercover'
 
-// 本地设备信息
-export class LocalDeviceInfo {
-  deviceName?: string;
-  networkId?: string;
-  deviceType?: number;
-  deviceId?: string;
-
-  stringify(): string {
-    let str: string = '';
-    if (this.deviceName) str += 'deviceName: ' + this.deviceName;
-    if (this.deviceType) str += 'deviceType: ' + this.deviceType;
-    if (this.networkId) str += 'networkId: ' + this.networkId;
-    if (this.deviceId) str += 'deviceId: ' + this.deviceId;
-    return str;
-  }
-}
-
 export class DistributedDeviceManager {
   static dmInstance: deviceManager.DeviceManager;
 
@@ -30,7 +13,7 @@ export class DistributedDeviceManager {
 
   static bindDeviceList: Array<deviceManager.DeviceBasicInfo> = [];
 
-  static localDeviceInfo: LocalDeviceInfo;
+  static localDeviceInfo: deviceManager.DeviceBasicInfo;
 
   static subscribeID: number;
 
@@ -87,7 +70,10 @@ export class DistributedDeviceManager {
       console.log(TAG, 'local device type: ' + JSON.stringify(deviceType));
       let deviceId: string = DistributedDeviceManager.dmInstance.getLocalDeviceId();
       console.log(TAG, 'local device id: ' + JSON.stringify(deviceId));
-
+      DistributedDeviceManager.localDeviceInfo.deviceName = deviceName;
+      DistributedDeviceManager.localDeviceInfo.networkId = deviceNetworkId;
+      DistributedDeviceManager.localDeviceInfo.deviceId = deviceId;
+      DistributedDeviceManager.localDeviceInfo.deviceType = deviceType.toString();
     } catch (err) {
       let e: BusinessError = err as BusinessError;
       console.error(TAG, 'getLocalDeviceInfo errCode:' + e.code + ',errMessage:' + e.message);
