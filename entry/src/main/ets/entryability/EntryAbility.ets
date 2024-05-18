@@ -6,6 +6,8 @@ import window from '@ohos.window';
 import { Permissions } from '@ohos.abilityAccessCtrl';
 import { checkPermission, requestPermission } from '../distributed_abilities/DistributedPermission';
 import { DistributedDeviceManager } from '../distributed_abilities/DistributedDeviceManager';
+import preferenceUtil from '../utils/UserPreferenceUtil';
+import { userPrefName } from '../utils/common';
 
 // 要用到的权限
 const PERMISSIONS: Array<Permissions> = [
@@ -19,6 +21,9 @@ export default class EntryAbility extends UIAbility {
     //设置屏幕常亮
     let thisWindow = await window.getLastWindow(this.context);
     thisWindow.setWindowKeepScreenOn(true);
+
+    // 加载用户首选项
+    await preferenceUtil.loadPreference(this.context, userPrefName);
 
     // 申请权限
     await requestPermission(this.context, PERMISSIONS)

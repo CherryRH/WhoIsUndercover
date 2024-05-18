@@ -5,6 +5,7 @@ import { DistributedDeviceManager } from '../distributed_abilities/DistributedDe
 struct Index {
   @State message: string = 'Hello World';
 
+
   build() {
     Column({space: 10}) {
 
