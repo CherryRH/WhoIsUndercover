@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "app_name",
+      "value": "WhoIsUndercover"
+    },
+    {
+      "name": "pkgName",
+      "value": "com.ohapp.whoisundercover"
+    },
+    {
+      "name": "app_operation",
+      "value": "Bind device to start a game."
+    }
+  ]
+}

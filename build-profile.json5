@@ -1,0 +1,49 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "material": {
+          "certpath": "C:\\Users\\陈瑞涵\\.ohos\\config\\openharmony\\auto_ohos_default_WhoIsUndercover_com.ohapp.whoisundercover.cer",
+          "storePassword": "0000001AF52EB3D1C9BA3BF0B9725FFFD386A6763F6E985455541D287C0EAB24E9F0FAFBE7F8054A2BCB",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001AF20547904F798927B1114C8EECCB2F0FB068285470F7BF69A79A11728F454D33658C49AF3798",
+          "profile": "C:\\Users\\陈瑞涵\\.ohos\\config\\openharmony\\auto_ohos_default_WhoIsUndercover_com.ohapp.whoisundercover.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\陈瑞涵\\.ohos\\config\\openharmony\\auto_ohos_default_WhoIsUndercover_com.ohapp.whoisundercover.p12"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compileSdkVersion": 10,
+        "compatibleSdkVersion": 10,
+        "runtimeOS": "OpenHarmony",
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}
