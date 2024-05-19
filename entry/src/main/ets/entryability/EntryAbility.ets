@@ -7,7 +7,8 @@ import { Permissions } from '@ohos.abilityAccessCtrl';
 import { checkPermission, requestPermission } from '../distributed_abilities/DistributedPermission';
 import { DistributedDeviceManager } from '../distributed_abilities/DistributedDeviceManager';
 import preferenceUtil from '../utils/UserPreferenceUtil';
-import { userPrefName } from '../utils/common';
+import { userPrefName } from '../utils/Common';
+import WordProvider from '../utils/WordProvider';
 
 // 要用到的权限
 const PERMISSIONS: Array<Permissions> = [
@@ -33,8 +34,6 @@ export default class EntryAbility extends UIAbility {
 
     // 初始化分布式设备管理器
     DistributedDeviceManager.init();
-    // 获取本地设备信息
-    DistributedDeviceManager.getLocalDeviceInfo();
   }
 
   onDestroy(): void {

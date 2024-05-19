@@ -1,5 +1,5 @@
-import deviceManager from '@ohos.distributedHardware.deviceManager';
-import {AvatarUrls} from '../utils/common'
+import deviceManager from '@ohos.distributedDeviceManager';
+import {AvatarUrls} from '../utils/Common'
 
 const tag: string = 'TestTag [Player]:';
 
@@ -9,7 +9,7 @@ const tag: string = 'TestTag [Player]:';
  * */
 export default class Player {
   // 设备信息
-  private deviceInfo: deviceManager.DeviceInfo;
+  private deviceInfo: deviceManager.DeviceBasicInfo | null;
   // 玩家名称
   private playerName: string;
   // 玩家头像
@@ -27,7 +27,7 @@ export default class Player {
   // 被投总票数
   private allVotes: number;
 
-  constructor(deviceInfo?: deviceManager.DeviceInfo, playerName?: string, avatar?: number) {
+  constructor(deviceInfo?: deviceManager.DeviceBasicInfo, playerName?: string, avatar?: number) {
     this.deviceInfo = deviceInfo ?? null;
     this.playerName = playerName ?? "";
     this.avatar = avatar ?? 0;
@@ -39,11 +39,11 @@ export default class Player {
     this.allVotes = 0;
   }
 
-  public getDeviceInfo(): deviceManager.DeviceInfo {
+  public getDeviceInfo(): deviceManager.DeviceBasicInfo | null {
     return this.deviceInfo;
   }
 
-  public setDeviceInfo(deviceInfo: deviceManager.DeviceInfo): void {
+  public setDeviceInfo(deviceInfo: deviceManager.DeviceBasicInfo): void {
     if (!deviceInfo) {
       console.error(tag, '玩家设备信息不能为空');
       return;

@@ -3,7 +3,7 @@ import router from '@ohos.router'
 const tag: string = 'TestTag [Router]:';
 
 //路由函数的封装
-export default function routerIndexPage() {
+export function toIndexPage() {
   router.pushUrl(
     {
       url: 'pages/Index',
@@ -12,7 +12,22 @@ export default function routerIndexPage() {
     router.RouterMode.Single,
     Error => {
       if (Error) {
-        console.error(tag, 'Rout to ' + '/pages/Index' + ' failed.');
+        console.error(tag, 'Rout to ' + 'pages/Index' + ' failed.');
+      }
+    }
+  )
+}
+
+export function toHallPage() {
+  router.pushUrl(
+    {
+      url: 'pages/HallPage',
+      params: new PageInfo(0)
+    },
+    router.RouterMode.Single,
+    Error => {
+      if (Error) {
+        console.error(tag, 'Rout to ' + 'pages/HallPage' + ' failed.');
       }
     }
   )

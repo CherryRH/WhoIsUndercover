@@ -1,4 +1,4 @@
-import Player from './player'
+import Player from './Player'
 import Round from './Round';
 
 const tag: string = 'TestTag [Game]:';

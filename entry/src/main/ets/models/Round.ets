@@ -1,5 +1,6 @@
-import Player from './player'
-import Remark from './remark';
+import { Word } from '../utils/WordProvider';
+import Player from './Player'
+import Remark from './Remark';
 
 const tag: string = 'TestTag [Round]:';
 
@@ -10,16 +11,13 @@ const tag: string = 'TestTag [Round]:';
 export default class Round {
   // 本轮参与的玩家
   private players: Player[];
-  // 卧底词
-  private undercoverWord: string;
-  // 平民词
-  private civilianWord: string;
+  // 本轮词语
+  private word: Word;
   // 本轮的所有发言
   private remarks: Remark[];
 
   constructor() {
-    this.undercoverWord = "";
-    this.civilianWord = "";
+    this.word = new Word();
   }
 
   // 本轮是否结束（投票结束）
@@ -65,20 +63,12 @@ export default class Round {
     return this.players;
   }
 
-  public setUndercoverWord(undercoverWord: string): void {
-    this.undercoverWord = undercoverWord;
+  public setWord(word: Word): void {
+    this.word = word;
   }
 
-  public getUndercoverWord(): string {
-    return this.undercoverWord;
-  }
-
-  public setCivilianWord(civilianWord: string): void {
-    this.civilianWord = civilianWord;
-  }
-
-  public getCivilianWord(): string {
-    return this.civilianWord;
+  public getWord(): Word {
+    return this.word;
   }
 
   public setRemarks(remarks: Remark[]): void {
