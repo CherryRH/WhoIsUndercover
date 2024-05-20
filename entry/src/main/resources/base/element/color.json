@@ -3,6 +3,18 @@
     {
       "name": "start_window_background",
       "value": "#FFFFFF"
+    },
+    {
+      "name": "card_background",
+      "value": "#FFF5F5F5"
+    },
+    {
+      "name": "button_background",
+      "value": "#87e8de"
+    },
+    {
+      "name": "page_background",
+      "value": "#ffd4e4ef"
     }
   ]
 }

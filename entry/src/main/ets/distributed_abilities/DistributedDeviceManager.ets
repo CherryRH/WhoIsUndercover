@@ -1,7 +1,7 @@
 import deviceManager from '@ohos.distributedDeviceManager';
-import { BusinessError } from '@ohos.base';
+import { BusinessError, Callback } from '@ohos.base';
 
-const TAG: string = '[DistributedDeviceManagerTestTag]';
+const TAG: string = 'TestTag [DistributedDeviceManager]:';
 export const BUNDLE_NAME: string = 'com.ohapp.whoisundercover'
 
 // 本地设备信息
@@ -19,11 +19,9 @@ export class DistributedDeviceManager {
 
   static availableDeviceList: Array<deviceManager.DeviceBasicInfo> = [];
 
-  static bindDeviceList: Array<deviceManager.DeviceBasicInfo> = [];
-
   static localDeviceInfo: LocalDeviceInfo;
 
-  static subscribeID: number;
+  static subscribeID: number = 100;
 
   static publishID: number;
 
@@ -41,9 +39,9 @@ export class DistributedDeviceManager {
   }
 
   // 同步所有可信设备信息列表
-  static getDeviceInfoList() {
+  static getAvailableDeviceListSync() {
     try {
-      DistributedDeviceManager.deviceInfoList = DistributedDeviceManager.dmInstance.getAvailableDeviceListSync();
+      DistributedDeviceManager.availableDeviceList = DistributedDeviceManager.dmInstance.getAvailableDeviceListSync();
       console.log(TAG, '获取可信设备信息列表成功');
     } catch (err) {
       let e: BusinessError = err as BusinessError;
@@ -123,14 +121,30 @@ export class DistributedDeviceManager {
 
   // 认证设备，返回true则为认证成功
   static bindTarget(device: deviceManager.DeviceBasicInfo): boolean {
+    // 如果已经认证过，则跳过
+    for (let it of DistributedDeviceManager.availableDeviceList) {
+      if (device.deviceId === it.deviceId) {
+        return false;
+      }
+    }
     try {
+      if (!DistributedDeviceManager.dmInstance) {
+        console.error(TAG, '设备管理器失效');
+        return false;
+      }
+      if (!device || !device.deviceId) {
+        console.error(TAG, '认证设备信息错误');
+        return false;
+      }
       // 认证的设备信息可以从发现的结果中获取
       DistributedDeviceManager.dmInstance.bindTarget(
         device.deviceId,
         {
-          // bindType: 1,
-          // targetPkgName: BUNDLE_NAME,
-          // appName: 'WhoIsUndercover'
+          bindLevel: 3,
+          bindType: 1,
+          targetPkgName: BUNDLE_NAME,
+          appName: 'WhoIsUndercover',
+
         },
         (err, data) => {
           if (err) {
@@ -149,32 +163,57 @@ export class DistributedDeviceManager {
     return false;
   }
 
-  // 认证所有可信设备
+  // 认证所有设备
   static bindAllTarget() {
-    for (let i = 0; i < DistributedDeviceManager.availableDeviceList.length; i++) {
-      let ifBind = DistributedDeviceManager.bindTarget(DistributedDeviceManager.availableDeviceList[i]);
+    for (let i = 0; i < DistributedDeviceManager.deviceInfoList.length; i++) {
+      let ifBind = DistributedDeviceManager.bindTarget(DistributedDeviceManager.deviceInfoList[i]);
       if (ifBind) {
         // 认证成功，加入认证设备列表
-        DistributedDeviceManager.bindDeviceList.push(DistributedDeviceManager.availableDeviceList[i]);
+        DistributedDeviceManager.availableDeviceList.push(DistributedDeviceManager.deviceInfoList[i]);
       }
     }
+  }
+
+  // 判断某设备是否已认证
+  static ifDeviceBinded(device: deviceManager.DeviceBasicInfo): boolean {
+    DistributedDeviceManager.getAvailableDeviceList();
+    for (let device of DistributedDeviceManager.availableDeviceList) {
+      if (device.deviceId === device.deviceId) return true;
+    }
+    return false;
   }
 
   // 取消认证设备
   static unbindTarget(deviceId: string) {
     try {
       DistributedDeviceManager.dmInstance.unbindTarget(deviceId);
+      // 从可信列表中删除
+      for (let device of DistributedDeviceManager.availableDeviceList) {
+        if (deviceId === device.deviceId) {
+          let index = DistributedDeviceManager.availableDeviceList.indexOf(device);
+          DistributedDeviceManager.availableDeviceList.splice(index, 1);
+        }
+      }
+      console.log(TAG, '已取消认证设备' + deviceId);
     } catch (err) {
       let e: BusinessError = err as BusinessError;
       console.error(TAG, 'unbindTarget errCode:' + e.code + ',errMessage:' + e.message);
     }
   }
 
+  // 取消认证所有已认证的设备
+  static unBindAllTarget() {
+    for (let i = 0; i < DistributedDeviceManager.availableDeviceList.length; i++) {
+      DistributedDeviceManager.unbindTarget(DistributedDeviceManager.availableDeviceList[i].deviceId);
+    }
+  }
+
   // 注册设备状态回调
-  static onDeviceStateChange() {
+  static onDeviceStateChange(callback: Callback<number>) {
     try {
       DistributedDeviceManager.dmInstance.on('deviceStateChange', (data) => {
         console.info(TAG, 'deviceStateChange on:' + JSON.stringify(data));
+        callback(data.action);
       });
     } catch (err) {
       let e: BusinessError = err as BusinessError;
@@ -191,6 +230,40 @@ export class DistributedDeviceManager {
     } catch (err) {
       let e: BusinessError = err as BusinessError;
       console.error(TAG, 'deviceStateChange errCode:' + e.code + ',errMessage:' + e.message);
+    }
+  }
+
+  // 注册发现设备成功回调
+  static onDiscoverSuccess(callback: Callback<deviceManager.DeviceBasicInfo[]>) {
+    try {
+      DistributedDeviceManager.dmInstance.on('discoverSuccess', (data) => {
+        // 如果已经搜索到，则跳过
+        for (let device of DistributedDeviceManager.deviceInfoList) {
+          if (device.deviceId === data.device.deviceId) {
+            return;
+          }
+        }
+        DistributedDeviceManager.deviceInfoList.push(data.device);
+        callback(DistributedDeviceManager.deviceInfoList);
+        console.info(TAG, "discoverSuccess:" + JSON.stringify(data));
+      });
+    } catch (err) {
+      let e: BusinessError = err as BusinessError;
+      console.error(TAG, "discoverSuccess errCode:" + e.code + ",errMessage:" + e.message);
+    }
+  }
+
+  // 取消注册发现设备成功回调
+  static offDiscoverSuccess() {
+    try {
+      DistributedDeviceManager.dmInstance.off('discoverSuccess', (data) => {
+        let index = DistributedDeviceManager.availableDeviceList.indexOf(data.device);
+        DistributedDeviceManager.availableDeviceList.splice(index, 1);
+        console.info(TAG,'discoverSuccess' + JSON.stringify(data));
+      });
+    } catch (err) {
+      let e: BusinessError = err as BusinessError;
+      console.error(TAG, "discoverSuccess errCode:" + e.code + ",errMessage:" + e.message);
     }
   }
 
@@ -227,6 +300,8 @@ export class DistributedDeviceManager {
     try {
       DistributedDeviceManager.dmInstance = deviceManager.createDeviceManager('com.ohapp.whoisundercover');
       deviceManager.releaseDeviceManager(DistributedDeviceManager.dmInstance);
+      DistributedDeviceManager.offDeviceStateChange();
+      DistributedDeviceManager.offDiscoverSuccess();
       console.log(TAG, '释放分布式设备管理器成功');
     } catch (err) {
       let e: BusinessError = err as BusinessError;

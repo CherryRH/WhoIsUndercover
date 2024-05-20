@@ -9,6 +9,7 @@ import { DistributedDeviceManager } from '../distributed_abilities/DistributedDe
 import preferenceUtil from '../utils/UserPreferenceUtil';
 import { userPrefName } from '../utils/Common';
 import WordProvider from '../utils/WordProvider';
+import DistributedKVStore from '../distributed_abilities/DistributedKVStore';
 
 // 要用到的权限
 const PERMISSIONS: Array<Permissions> = [
@@ -26,6 +27,9 @@ export default class EntryAbility extends UIAbility {
     // 加载用户首选项
     await preferenceUtil.loadPreference(this.context, userPrefName);
 
+    // 创建分布式键值数据库管理器
+    DistributedKVStore.createKVManager(this.context);
+
     // 申请权限
     await requestPermission(this.context, PERMISSIONS)
       .then(()=> {
@@ -38,6 +42,8 @@ export default class EntryAbility extends UIAbility {
 
   onDestroy(): void {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onDestroy');
+
+    DistributedDeviceManager.release();
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
