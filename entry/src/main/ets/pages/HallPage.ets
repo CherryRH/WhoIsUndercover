@@ -6,6 +6,13 @@ import localStorage from '../utils/MyStorage'
 import deviceManager from '@ohos.distributedDeviceManager'
 import DeviceInfoCard from '../components/DeviceInfoCard'
 import Player from '../models/Player'
+import { toGamePage } from '../utils/Routers'
+import distributedKVStore from '@ohos.data.distributedKVStore'
+import DistributedKVStore from '../distributed_abilities/DistributedKVStore'
+import MessageSender from '../distributed_abilities/MessageSender'
+import MessageReceiver, { Message, PlayerInfoMessage } from '../distributed_abilities/MessageReceiver'
+
+const tag: string = 'TestTag [HallPage]:';
 
 @Entry(localStorage)
 @Component
@@ -15,6 +22,23 @@ struct HallPage {
   @State deviceInfoList: deviceManager.DeviceBasicInfo[] = DistributedDeviceManager.deviceInfoList;
   // 是否正在搜索设备
   @State isDiscovering: boolean = false;
+  // 是否有加入房间的邀请
+  @State ifInvited: boolean = false;
+  // 房主的networkId
+  @State hostNetworkId: string = '';
+
+  async aboutToAppear() {
+    DistributedDeviceManager.getAvailableDeviceListSync()
+    this.deviceInfoList = DistributedDeviceManager.availableDeviceList;
+    // 注册接收信息的回调
+    MessageReceiver.onReceiveMessage('GameMessage', (message: Message | PlayerInfoMessage) => {
+      // 房主发送开始游戏的邀请
+      if ((message as Message).message === 'GameStart') {
+        this.ifInvited = true;
+        this.hostNetworkId = message.sender;
+      }
+    })
+  }
 
   build() {
     Stack() {
@@ -58,10 +82,9 @@ struct HallPage {
                 DistributedDeviceManager.getAvailableDeviceListSync();
                 this.isDiscovering = true;
                 DistributedDeviceManager.onDiscoverSuccess((deviceInfoList: deviceManager.DeviceBasicInfo[]) => {
-                  this.deviceInfoList = deviceInfoList;
+                  this.deviceInfoList = Array.from(new Set([...deviceInfoList,...DistributedDeviceManager.availableDeviceList]));
                 })
                 DistributedDeviceManager.startDiscovering();
-                this.deviceInfoList = Array.from(new Set([...DistributedDeviceManager.deviceInfoList,...DistributedDeviceManager.availableDeviceList]));
               })
           }
         }
@@ -91,9 +114,9 @@ struct HallPage {
           .fontStyle(FontStyle.Italic)
           .textAlign(TextAlign.Center)
           .clickEffect({level: ClickEffectLevel.HEAVY, scale: 0.7})
-          .onClick(() => {
+          .onClick(async () => {
             // 如果已认证设备少于2个，则停止创建房间
-            if (DistributedDeviceManager.availableDeviceList.length < 2) {
+            if (DistributedDeviceManager.availableDeviceList.length < 1) {
               AlertDialog.show(
                 {
                   message: '已上线设备不能少于2个',
@@ -104,11 +127,57 @@ struct HallPage {
               )
               return;
             }
-            // 拉起已上线的设备
-
+            // 本机玩家成为房主
+            this.localPlayer.setIsHost(true);
+            // 向所有已上线的设备发送信息
+            DistributedDeviceManager.getAvailableDeviceListSync();
+            for (let device of DistributedDeviceManager.availableDeviceList) {
+              MessageSender.sendGameMessage(device.networkId, 'GameStart');
+            }
+            toGamePage(DistributedDeviceManager.localDeviceInfo.networkId, DistributedDeviceManager.availableDeviceList.length);
           })
       }
       .full()
+
+      if (this.ifInvited) {
+        Column({space: 50}) {
+          Text('有玩家邀请您进入游戏，是否进入？')
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .fontStyle(FontStyle.Italic)
+          Row() {
+            Text('否')
+              .width('30%')
+              .height('10%')
+              .fontColor(Color.Red)
+              .fontSize(30)
+              .fontWeight(FontWeight.Bolder)
+              .fontStyle(FontStyle.Italic)
+              .textAlign(TextAlign.Center)
+              .onClick(() => {
+                this.ifInvited = false;
+              })
+            Text('是')
+              .width('30%')
+              .height('10%')
+              .fontColor(Color.Blue)
+              .fontSize(30)
+              .fontWeight(FontWeight.Bolder)
+              .fontStyle(FontStyle.Italic)
+              .textAlign(TextAlign.Center)
+              .onClick(() => {
+                this.localPlayer.setIsHost(false);
+                this.ifInvited = false;
+                toGamePage(this.hostNetworkId);
+              })
+          }
+          .width('100%')
+          .justifyContent(FlexAlign.SpaceEvenly)
+        }
+        .full()
+        .justifyContent(FlexAlign.Center)
+        .backgroundBlurStyle(BlurStyle.Thin)
+      }
     }
     .full()
     .backgroundColor($r('app.color.page_background'))

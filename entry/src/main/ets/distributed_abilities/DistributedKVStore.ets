@@ -1,5 +1,5 @@
 import distributedKVStore from '@ohos.data.distributedKVStore';
-import { BusinessError } from '@ohos.base';
+import { BusinessError, Callback } from '@ohos.base';
 
 const tag: string = 'TestTag [DistributedKVStore]:';
 export const BUNDLE_NAME: string = 'com.ohapp.whoisundercover'
@@ -7,9 +7,6 @@ export const BUNDLE_NAME: string = 'com.ohapp.whoisundercover'
 export default class DistributedKVStore {
   // 分布式键值数据库管理器
   static kvManager: distributedKVStore.KVManager;
-  // 设备级键值数据库
-  static deviceKVStore: distributedKVStore.DeviceKVStore | null;
-  static deviceKVStoreID: string = 'WhoIsUndercoverDeviceKVStore';
   // 单版本键值数据库
   static singleKVStore: distributedKVStore.SingleKVStore | null;
   static singleKVStoreID: string = 'WhoIsUndercoverSingleKVStore';
@@ -27,6 +24,66 @@ export default class DistributedKVStore {
       let error = e as BusinessError;
       console.error(tag, `Failed to create KVManager.code is ${error.code},message is ${error.message}`);
     }
+  }
+
+  // 获取全部数据库ID
+  static async getAllKVStoreId() {
+    try {
+      console.info(tag, 'GetAllKVStoreId');
+      await DistributedKVStore.kvManager.getAllKVStoreId(BUNDLE_NAME).then((data: string[]) => {
+        console.info(tag, 'Succeeded in getting AllKVStoreId');
+        console.info(tag, `GetAllKVStoreId size = ${data.length}`);
+        for (let id of data) {
+          console.info(tag, `KVStoreId: ${id}`);
+        }
+      }).catch((err: BusinessError) => {
+        console.error(tag, `Failed to get AllKVStoreId.code is ${err.code},message is ${err.message}`);
+      });
+    } catch (e) {
+      let error = e as BusinessError;
+      console.error(tag, `Failed to get AllKVStoreId.code is ${error.code},message is ${error.message}`);
+    }
+  }
+
+  static createKVStore(context: Context, callback: Callback<void>) {
+    if (DistributedKVStore.singleKVStore != null) {
+      callback();
+      return;
+    }
+    const kvManagerConfig: distributedKVStore.KVManagerConfig = {
+      context: context,
+      bundleName: BUNDLE_NAME,
+    }
+    try {
+      DistributedKVStore.kvManager = distributedKVStore.createKVManager(kvManagerConfig);
+      console.info(tag, "Succeeded in creating KVManager");
+
+      const options: distributedKVStore.Options = {
+        createIfMissing: true,
+        encrypt: false,
+        backup: false,
+        autoSync: true,
+        kvStoreType: distributedKVStore.KVStoreType.SINGLE_VERSION,
+        securityLevel: distributedKVStore.SecurityLevel.S2,
+      };
+
+      DistributedKVStore.kvManager.getKVStore<distributedKVStore.SingleKVStore>(DistributedKVStore.singleKVStoreID, options).then((store: distributedKVStore.SingleKVStore) => {
+        console.info(tag, "Succeeded in getting SingleKVStore");
+        DistributedKVStore.singleKVStore = store;
+        callback();
+      }).catch((err: BusinessError) => {
+        console.error(tag, `Failed to get SingleKVStore.code is ${err.code},message is ${err.message}`);
+      });
+    } catch (e) {
+      let error = e as BusinessError;
+      console.error(tag, `Failed to create KVManager.code is ${error.code},message is ${error.message}`);
+    }
+  }
+
+  static setListener(context: Context, callback: Callback<distributedKVStore.ChangeNotification>) {
+    DistributedKVStore.createKVStore(context, () => {
+      DistributedKVStore.onDataChange(callback);
+    });
   }
 
   /*
@@ -55,6 +112,21 @@ export default class DistributedKVStore {
       let error = e as BusinessError;
       console.error(tag, `An unexpected error occurred.code is ${error.code},message is ${error.message}`);
     }
+  }
+
+  // 初始化值
+  static async initData() {
+    // 游戏信息
+    let entries: distributedKVStore.Entry[] = [
+      {
+        key: 'GameMessage',
+        value: {
+          type: distributedKVStore.ValueType.STRING,
+          value: ''
+        }
+      },
+    ];
+    await DistributedKVStore.putBatchInSKV(entries);
   }
 
   // 关闭单版本数据库
@@ -118,14 +190,14 @@ export default class DistributedKVStore {
   }
 
   // 添加键值
-  static async putSingleKVStore(key: string, value: distributedKVStore.ValueType) {
+  static async putInSKV(key: string, value: string | number | boolean) {
     try {
       if (DistributedKVStore.singleKVStore == null) {
         console.error(tag, 'SingleKVStore is null');
         return;
       }
       DistributedKVStore.singleKVStore.put(key, value).then(() => {
-        console.info(tag, `Succeeded in putting data:` + key + ' => ' + value.toString());
+        console.info(tag, `Succeeded in putting data: ${key} => ${value}`);
       }).catch((err: BusinessError) => {
         console.error(tag, `Failed to put.code is ${err.code},message is ${err.message}`);
       });
@@ -136,10 +208,14 @@ export default class DistributedKVStore {
   }
 
   // 批量添加键值
-  static async putBatchSingleKVStore(entries: distributedKVStore.Entry[]) {
+  static async putBatchInSKV(entries: distributedKVStore.Entry[]) {
     try {
       if (entries.length === 0) {
         console.error(tag, 'Entries is empty');
+        return;
+      }
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
         return;
       }
       console.info(tag, `entries: ${entries}`);
@@ -155,29 +231,16 @@ export default class DistributedKVStore {
   }
 
   // 删除指定键值
-  //static async
-
-  /*
-   * 设备级键值数据库
-   * 以下为设备级键值数据库的函数
-   * */
-
-  // 获取设备级键值数据库
-  static async getDeviceKVStore() {
+  static async deleteInSKV(key: string) {
     try {
-      const options: distributedKVStore.Options = {
-        createIfMissing: true,
-        encrypt: false,
-        backup: false,
-        autoSync: true,
-        kvStoreType: distributedKVStore.KVStoreType.DEVICE_COLLABORATION,
-        securityLevel: distributedKVStore.SecurityLevel.S2,
-      };
-      await DistributedKVStore.kvManager.getKVStore<distributedKVStore.DeviceKVStore>(DistributedKVStore.deviceKVStoreID, options).then((store: distributedKVStore.DeviceKVStore) => {
-        console.info(tag, "Succeeded in getting DeviceKVStore");
-        DistributedKVStore.deviceKVStore = store;
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
+      }
+      await DistributedKVStore.singleKVStore.delete(key).then(() => {
+        console.info(tag, 'Succeeded in deleting');
       }).catch((err: BusinessError) => {
-        console.error(tag, `Failed to get DeviceKVStore.code is ${err.code},message is ${err.message}`);
+        console.error(tag, `Failed to delete.code is ${err.code},message is ${err.message}`);
       });
     } catch (e) {
       let error = e as BusinessError;
@@ -185,79 +248,141 @@ export default class DistributedKVStore {
     }
   }
 
-  // 关闭设备级数据库
-  static async closeDeviceKVStore() {
+  // 批量删除键值
+  static async deleteBatchInSKV(keys: string[]) {
     try {
-      const options: distributedKVStore.Options = {
-        createIfMissing: true,
-        encrypt: false,
-        backup: false,
-        autoSync: true,
-        kvStoreType: distributedKVStore.KVStoreType.DEVICE_COLLABORATION,
-        schema: undefined,
-        securityLevel: distributedKVStore.SecurityLevel.S2,
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
       }
-      await DistributedKVStore.kvManager.getKVStore<distributedKVStore.DeviceKVStore>(DistributedKVStore.deviceKVStoreID, options).then(async (store: distributedKVStore.DeviceKVStore | null) => {
-        DistributedKVStore.deviceKVStore = store;
-        DistributedKVStore.deviceKVStore = null;
-        store = null;
-        await DistributedKVStore.kvManager.closeKVStore(BUNDLE_NAME, DistributedKVStore.deviceKVStoreID).then(() => {
-          console.info(tag, 'Succeeded in closing DeviceKVStore');
-        }).catch((err: BusinessError) => {
-          console.error(tag, `Failed to close DeviceKVStore.code is ${err.code},message is ${err.message}`);
-        });
+      await DistributedKVStore.singleKVStore.deleteBatch(keys).then(() => {
+        console.info(tag, 'Succeeded in deleting Batch');
       }).catch((err: BusinessError) => {
-        console.error(tag, `Failed to get DeviceKVStore.code is ${err.code},message is ${err.message}`);
+        console.error(tag, `Failed to delete Batch.code is ${err.code},message is ${err.message}`);
       });
     } catch (e) {
       let error = e as BusinessError;
-      console.error(tag, `Failed to close DeviceKVStore.code is ${error.code},message is ${error.message}`);
+      console.error(tag, `An unexpected error occurred.code is ${error.code},message is ${error.message}`);
     }
   }
 
-  // 删除设备级数据库
-  static async deleteDeviceKVStore() {
-    const options: distributedKVStore.Options = {
-      createIfMissing: true,
-      encrypt: false,
-      backup: false,
-      autoSync: true,
-      kvStoreType: distributedKVStore.KVStoreType.DEVICE_COLLABORATION,
-      schema: undefined,
-      securityLevel: distributedKVStore.SecurityLevel.S2,
-    }
+  // 获取指定键值
+  static async getInSKV(key: string) {
     try {
-      await DistributedKVStore.kvManager.getKVStore<distributedKVStore.DeviceKVStore>(DistributedKVStore.deviceKVStoreID, options).then(async (store: distributedKVStore.DeviceKVStore | null) => {
-        DistributedKVStore.deviceKVStore = store;
-        DistributedKVStore.deviceKVStore = null;
-        store = null;
-        await DistributedKVStore.kvManager.deleteKVStore(BUNDLE_NAME, DistributedKVStore.deviceKVStoreID).then(() => {
-          console.info(tag, 'Succeeded in deleting DeviceKVStore');
-        }).catch((err: BusinessError) => {
-          console.error(tag, `Failed to delete DeviceKVStore.code is ${err.code},message is ${err.message}`);
-        });
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
+      }
+      await DistributedKVStore.singleKVStore.get(key).then((data: string | number | boolean | Uint8Array) => {
+        console.info(tag, `Succeeded in getting ${key} => ${data}`);
       }).catch((err: BusinessError) => {
-        console.error(tag, `Failed to get DeviceKVStore.code is ${err.code},message is ${err.message}`);
+        console.error(tag, `Failed to get.code is ${err.code},message is ${err.message}`);
       });
     } catch (e) {
       let error = e as BusinessError;
-      console.error(tag, `Failed to delete DeviceKVStore.code is ${error.code},message is ${error.message}`);
+      console.error(tag, `Failed to get.code is ${error.code},message is ${error.message}`);
     }
   }
 
-  // 获取全部数据库ID
-  static async getAllKVStoreId() {
+  // 获取相同前缀的所有键值
+  static async getEntriesByKeyPrefix(keyPrefix: string) {
     try {
-      console.info(tag, 'GetAllKVStoreId');
-      await DistributedKVStore.kvManager.getAllKVStoreId(BUNDLE_NAME).then((data: string[]) => {
-        console.info(tag, 'Succeeded in getting AllKVStoreId');
-        console.info(tag, `GetAllKVStoreId size = ${data.length}`);
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
+      }
+      await DistributedKVStore.singleKVStore.getEntries(keyPrefix).then((entries: distributedKVStore.Entry[]) => {
+        console.info(tag, 'Succeeded in getting Entries');
+        console.info(tag, `Get Entries ${entries}`);
       }).catch((err: BusinessError) => {
-        console.error(tag, `Failed to get AllKVStoreId.code is ${err.code},message is ${err.message}`);
+        console.error(tag, `Failed to get Entries.code is ${err.code},message is ${err.message}`);
       });
     } catch (e) {
       let error = e as BusinessError;
-      console.error(tag, `Failed to get AllKVStoreId.code is ${error.code},message is ${error.message}`);
+      console.error(tag, `An unexpected error occurred.code is ${error.code},message is ${error.message} `);
+    }
+  }
+
+  // 手动触发同步
+  static sync(networkIds: string[]) {
+    try {
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
+      }
+      DistributedKVStore.singleKVStore.sync(networkIds, distributedKVStore.SyncMode.PUSH_PULL, 1000);
+      console.info(tag, 'Succeeded in sync');
+    } catch (e) {
+      let error = e as BusinessError;
+      console.error(tag, `An unexpected error occurred.code is ${error.code},message is ${error.message} `);
+    }
+  }
+
+  // 订阅数据变更通知
+  static onDataChange(callback: Callback<distributedKVStore.ChangeNotification>) {
+    try {
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
+      }
+      DistributedKVStore.singleKVStore.on('dataChange', distributedKVStore.SubscribeType.SUBSCRIBE_TYPE_ALL, (data: distributedKVStore.ChangeNotification) => {
+        console.info(tag, `dataChange on callback call data: ${data}`);
+        callback(data);
+      });
+    } catch (e) {
+      let error = e as BusinessError;
+      console.error(tag, `An unexpected error occurred.code is ${error.code},message is ${error.message}`);
+    }
+  }
+
+  // 取消订阅数据变更通知
+  static offDataChange(callback: Callback<distributedKVStore.ChangeNotification>) {
+    try {
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
+      }
+      DistributedKVStore.singleKVStore.off('dataChange', (data: distributedKVStore.ChangeNotification) => {
+        console.info(tag, `dataChange off callback call data: ${data}`);
+        callback(data);
+      });
+    } catch (err) {
+      let error = err as BusinessError;
+      console.error(tag, `Failed to unsubscribe DataChange.code is ${error.code},message is ${error.message}`);
+    }
+  }
+
+  // 订阅同步完成事件
+  static onSyncComplete(callback: Callback<[string, number][]>) {
+    try {
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
+      }
+      DistributedKVStore.singleKVStore.on('syncComplete', (data: [string, number][]) => {
+        console.info(tag, `syncComplete ${data}`);
+        callback(data);
+      });
+    } catch (e) {
+      let error = e as BusinessError;
+      console.error(tag, `Failed to subscribe syncComplete.code is ${error.code},message is ${error.message}`);
+    }
+  }
+
+  // 取消订阅同步完成事件
+  static offSyncComplete(callback: Callback<[string, number][]>) {
+    try {
+      if (DistributedKVStore.singleKVStore == null) {
+        console.error(tag, 'SingleKVStore is null');
+        return;
+      }
+      DistributedKVStore.singleKVStore.off('syncComplete', (data: [string, number][]) => {
+        console.info(tag, `syncComplete callback call data: ${data}`);
+        callback(data);
+      });
+    } catch (err) {
+      let error = err as BusinessError;
+      console.error(tag, `Failed to unsubscribe syncComplete.code is ${error.code},message is ${error.message}`);
     }
   }
 }

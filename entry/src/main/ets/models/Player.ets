@@ -17,8 +17,6 @@ export default class Player {
   // 角色类型
   private role: RoleType;
   // 玩家状态
-  private playerStatus: PlayerStatus;
-  // 游戏中状态
   private inGameStatus: InGameStatus;
   // 是否是主机
   private isHost: boolean;
@@ -26,17 +24,22 @@ export default class Player {
   private votes: number;
   // 被投总票数
   private allVotes: number;
+  // 玩家描述
+  private remark: string;
+  // 玩家词语
+  private word: string;
 
   constructor(deviceInfo?: deviceManager.DeviceBasicInfo, playerName?: string, avatar?: number) {
     this.deviceInfo = deviceInfo ?? null;
     this.playerName = playerName ?? "";
     this.avatar = avatar ?? 0;
     this.role = RoleType.Undercover;
-    this.playerStatus = PlayerStatus.Offline;
     this.inGameStatus = InGameStatus.WaitForWord;
     this.isHost = false;
     this.votes = 0;
     this.allVotes = 0;
+    this.remark = '';
+    this.word = '';
   }
 
   public getDeviceInfo(): deviceManager.DeviceBasicInfo | null {
@@ -83,14 +86,6 @@ export default class Player {
     this.role = role;
   }
 
-  public getPlayerStatus(): PlayerStatus {
-    return this.playerStatus;
-  }
-
-  public setPlayerStatus(playerStatus: PlayerStatus): void {
-    this.playerStatus = playerStatus;
-  }
-
   public getInGameStatus(): InGameStatus {
     return this.inGameStatus;
   }
@@ -122,6 +117,22 @@ export default class Player {
   public setAllVotes(allVotes: number) {
     this.allVotes = allVotes;
   }
+
+  public getRemark(): string {
+    return this.remark;
+  }
+
+  public setRemark(remark: string) {
+    this.remark = remark;
+  }
+
+  public getWord(): string {
+    return this.word;
+  }
+
+  public setWord(word: string) {
+    return this.word;
+  }
 }
 
 /*
@@ -135,18 +146,6 @@ enum RoleType {
 
 /*
  * 玩家状态枚举
- * 分为离线、在线、等待、准备、游戏中
- * */
-enum PlayerStatus {
-  Offline,
-  Online,
-  Waiting,
-  Ready,
-  InGame
-}
-
-/*
- * 游戏中状态枚举
  * 分为等待分配词语、等待发言、发言中、等待投票、已投票、出局、获胜
  * */
 enum InGameStatus {

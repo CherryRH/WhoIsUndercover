@@ -43,11 +43,7 @@ struct Index {
     this.avatar = avatar as number;
     this.winNum = winNum as number;
     this.failNum = failNum as number;
-    // 获取键值数据库
-    await DistributedKVStore.getSingleKVStore();
-    await DistributedKVStore.getDeviceKVStore();
-    await DistributedKVStore.getAllKVStoreId();
-    await DistributedKVStore.putSingleKVStore('hello', 114514);
+
   }
 
   // 保存玩家信息
@@ -169,7 +165,6 @@ struct Index {
               await this.savePlayer();
               // 获取本地设备信息
               DistributedDeviceManager.getLocalDeviceInfo();
-
               toHallPage();
             })
         }

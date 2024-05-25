@@ -66,6 +66,18 @@ export class DistributedDeviceManager {
     }
   }
 
+  // 获取可信设备的networkIDs
+  static getAvailableDeviceNetworkIDs(): string[] {
+    DistributedDeviceManager.getAvailableDeviceListSync();
+    let networkIDs: string[] = [];
+    for (let device of DistributedDeviceManager.availableDeviceList) {
+      if (device.networkId != '') {
+        networkIDs.push(device.networkId!);
+      }
+    }
+    return networkIDs;
+  }
+
   // 获取本地设备信息
   static getLocalDeviceInfo() {
     try {
@@ -168,10 +180,10 @@ export class DistributedDeviceManager {
     for (let i = 0; i < DistributedDeviceManager.deviceInfoList.length; i++) {
       let ifBind = DistributedDeviceManager.bindTarget(DistributedDeviceManager.deviceInfoList[i]);
       if (ifBind) {
-        // 认证成功，加入认证设备列表
-        DistributedDeviceManager.availableDeviceList.push(DistributedDeviceManager.deviceInfoList[i]);
+        DistributedDeviceManager.deviceInfoList.splice(i, 1);
       }
     }
+    DistributedDeviceManager.getAvailableDeviceListSync();
   }
 
   // 判断某设备是否已认证
@@ -187,10 +199,11 @@ export class DistributedDeviceManager {
   static unbindTarget(deviceId: string) {
     try {
       DistributedDeviceManager.dmInstance.unbindTarget(deviceId);
-      // 从可信列表中删除
+      // 从可信列表中删除，放入发现列表中
       for (let device of DistributedDeviceManager.availableDeviceList) {
         if (deviceId === device.deviceId) {
           let index = DistributedDeviceManager.availableDeviceList.indexOf(device);
+          DistributedDeviceManager.deviceInfoList.push(device);
           DistributedDeviceManager.availableDeviceList.splice(index, 1);
         }
       }
