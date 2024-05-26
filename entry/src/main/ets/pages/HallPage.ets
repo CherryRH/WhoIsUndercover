@@ -27,7 +27,7 @@ struct HallPage {
   // 房主的networkId
   @State hostNetworkId: string = '';
 
-  async aboutToAppear() {
+  async onPageShow() {
     DistributedDeviceManager.getAvailableDeviceListSync()
     this.deviceInfoList = DistributedDeviceManager.availableDeviceList;
     // 注册接收信息的回调
@@ -38,6 +38,10 @@ struct HallPage {
         this.hostNetworkId = message.sender;
       }
     })
+  }
+
+  onPageHide() {
+    MessageReceiver.offReceiveMessage('GameMessage');
   }
 
   build() {
@@ -134,7 +138,7 @@ struct HallPage {
             for (let device of DistributedDeviceManager.availableDeviceList) {
               MessageSender.sendGameMessage(device.networkId, 'GameStart');
             }
-            toGamePage(DistributedDeviceManager.localDeviceInfo.networkId, DistributedDeviceManager.availableDeviceList.length);
+            toGamePage(DistributedDeviceManager.localDeviceInfo.networkId, DistributedDeviceManager.availableDeviceList.length + 1);
           })
       }
       .full()

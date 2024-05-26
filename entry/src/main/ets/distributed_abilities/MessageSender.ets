@@ -49,6 +49,26 @@ export default class MessageSender {
     MessageSender.sendWant(want);
   }
 
+  // 发送词语信息
+  static sendWordMessage(networkId: string, word: string) {
+    let want: Want = {
+      deviceId: networkId,
+      bundleName: BUNDLE_NAME,
+      abilityName: 'EntryAbility',
+      parameters: {
+        tag: 'WordMessage',
+        message: word,
+        sender: DistributedDeviceManager.localDeviceInfo.networkId!
+      }
+    }
+    MessageSender.sendWant(want);
+  }
+
+  // 发送评论信息
+  static sendRemarkMessage(networkId: string, remark: string) {
+    
+  }
+
   // 发送玩家信息
   static sendPlayerInfoMessage(networkId: string, player: Player) {
     let want: Want = {
@@ -59,10 +79,11 @@ export default class MessageSender {
         tag: 'PlayerInfoMessage',
         playerName: player.getPlayerName(),
         avatar: player.getAvatar(),
-        networkId: player.getDeviceInfo() ? player.getDeviceInfo()!.networkId! : DistributedDeviceManager.localDeviceInfo.networkId!,
+        networkId: player.getNetworkId(),
         sender: DistributedDeviceManager.localDeviceInfo.networkId!
       }
     }
     MessageSender.sendWant(want);
   }
+
 }

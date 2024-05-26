@@ -9,7 +9,7 @@ const tag: string = 'TestTag [Player]:';
  * */
 export default class Player {
   // 设备信息
-  private deviceInfo: deviceManager.DeviceBasicInfo | null;
+  private networkId: string;
   // 玩家名称
   private playerName: string;
   // 玩家头像
@@ -29,12 +29,12 @@ export default class Player {
   // 玩家词语
   private word: string;
 
-  constructor(deviceInfo?: deviceManager.DeviceBasicInfo, playerName?: string, avatar?: number) {
-    this.deviceInfo = deviceInfo ?? null;
+  constructor(networkId?: string, playerName?: string, avatar?: number) {
+    this.networkId = networkId ?? '';
     this.playerName = playerName ?? "";
     this.avatar = avatar ?? 0;
-    this.role = RoleType.Undercover;
-    this.inGameStatus = InGameStatus.WaitForWord;
+    this.role = RoleType.Unknown;
+    this.inGameStatus = InGameStatus.WaitForStart;
     this.isHost = false;
     this.votes = 0;
     this.allVotes = 0;
@@ -42,16 +42,26 @@ export default class Player {
     this.word = '';
   }
 
-  public getDeviceInfo(): deviceManager.DeviceBasicInfo | null {
-    return this.deviceInfo;
+  public reset() {
+    this.role = RoleType.Unknown;
+    this.inGameStatus = InGameStatus.WaitForStart;
+    this.isHost = false;
+    this.votes = 0;
+    this.allVotes = 0;
+    this.remark = '';
+    this.word = '';
   }
 
-  public setDeviceInfo(deviceInfo: deviceManager.DeviceBasicInfo): void {
-    if (!deviceInfo) {
-      console.error(tag, '玩家设备信息不能为空');
+  public getNetworkId(): string {
+    return this.networkId;
+  }
+
+  public setNetworkId(networkId: string): void {
+    if (!networkId || networkId === '') {
+      console.error(tag, '玩家networkId不能为空');
       return;
     }
-    this.deviceInfo = deviceInfo;
+    this.networkId = networkId;
   }
 
   public getPlayerName(): string {
@@ -131,24 +141,26 @@ export default class Player {
   }
 
   public setWord(word: string) {
-    return this.word;
+    this.word = word;
   }
 }
 
 /*
  * 角色类型枚举
- * 目前分为两类：卧底和平民
+ * 目前分为两类：未知、卧底和平民
  * */
-enum RoleType {
+export enum RoleType {
+  Unknown,
   Undercover,
   Civilian
 }
 
 /*
  * 玩家状态枚举
- * 分为等待分配词语、等待发言、发言中、等待投票、已投票、出局、获胜
+ * 分为等待游戏开始、等待分配词语、等待发言、发言中、等待投票、已投票、出局、获胜
  * */
-enum InGameStatus {
+export enum InGameStatus {
+  WaitForStart,
   WaitForWord,
   WaitForSpeaking,
   Speaking,

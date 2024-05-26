@@ -165,6 +165,7 @@ struct Index {
               await this.savePlayer();
               // 获取本地设备信息
               DistributedDeviceManager.getLocalDeviceInfo();
+              this.localPlayer.setNetworkId(DistributedDeviceManager.localDeviceInfo.networkId!);
               toHallPage();
             })
         }

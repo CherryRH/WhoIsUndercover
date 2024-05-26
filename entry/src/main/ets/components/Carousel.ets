@@ -116,7 +116,7 @@ export default struct Carousel {
       )
       Row() {
         Button('向左')
-          .backgroundColor('#ff04cdb4')
+          .backgroundColor($r('app.color.button_background'))
           .onClick(() => {
             this.frontID = (this.frontID + 1 == this.Size ? 0 : this.frontID + 1);
             animateTo({
@@ -133,7 +133,7 @@ export default struct Carousel {
           .fontStyle(FontStyle.Italic)
           .textAlign(TextAlign.Center)
         Button('向右')
-          .backgroundColor('#ff04cdb4')
+          .backgroundColor($r('app.color.button_background'))
           .onClick(() => {
             let preID = this.frontID;
             this.frontID = (preID - 1 == -1 ? this.Size - 1 : preID - 1);
@@ -146,7 +146,7 @@ export default struct Carousel {
           })
       }
       .width('100%')
-      .height('20%')
+      .height('10%')
       .justifyContent(FlexAlign.SpaceAround)
     }
     .width('100%')
@@ -203,7 +203,7 @@ struct Graph {
     Column() {
       Row({space: 10}) {
         Image(AvatarUrls[this.player.getAvatar()])
-          .width(25)
+          .width(30)
           .borderRadius(5)
           .margin({left: 5})
         Text(this.player.getPlayerName().length === 0 ? '玩家' : this.player.getPlayerName())
@@ -215,7 +215,7 @@ struct Graph {
           .textOverflow({overflow: TextOverflow.Ellipsis})
       }
       .width("100%")
-      .height("10%")
+      .height("15%")
       .justifyContent(FlexAlign.Start)
       Divider()
       if (this.player.getRemark().length === 0) {

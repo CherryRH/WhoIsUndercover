@@ -19,12 +19,14 @@ export class Message {
 export class PlayerInfoMessage {
   playerName: string;
   avatar: number;
+  networkId: string;
   sender: string;
   tag: string;
 
-  constructor(playerName: string, avatar: number, sender: string, tag: string) {
+  constructor(playerName: string, avatar: number, networkId: string, sender: string, tag: string) {
     this.playerName = playerName;
     this.avatar = avatar;
+    this.networkId = networkId;
     this.sender = sender;
     this.tag = tag;
   }
@@ -53,7 +55,18 @@ export default class MessageReceiver {
       }
     }
     catch(error){
-      console.error(tag , `Error when ReceiveMessage , error information:${error}`);
+      console.error(tag , `Error when on ReceiveMessage , error information:${error}`);
+    }
+  }
+
+  static offReceiveMessage(tag: string) {
+    try {
+      if (MessageSender.context) {
+        MessageSender.context.eventHub.off(tag);
+      }
+    }
+    catch(error){
+      console.error(tag , `Error when off ReceiveMessage , error information:${error}`);
     }
   }
 }
