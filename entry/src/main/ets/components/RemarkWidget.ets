@@ -1,9 +1,11 @@
+import MessageSender from '../distributed_abilities/MessageSender';
 import Player, { InGameStatus } from '../models/Player';
 
 @Component
 export default struct RemarkWidget {
   @Link localPlayer: Player;
   @Prop hostNetworkId: string;
+  @Prop leftPlayers: Player[];
   // 倒计时
   @State time: number = 60;
   @State intervalId: number = 0;
@@ -22,8 +24,9 @@ export default struct RemarkWidget {
 
   // 发送评论
   sendRemarkToHost() {
-
-    this.localPlayer.setInGameStatus(InGameStatus.WaitForVote);
+    for (let player of this.leftPlayers) {
+      MessageSender.sendRemarkMessage(player.getNetworkId(), this.localPlayer.getRemark());
+    }
   }
 
   build() {

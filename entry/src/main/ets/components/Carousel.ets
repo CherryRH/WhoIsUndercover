@@ -1,7 +1,8 @@
 /*
  * 组件：立体轮播图
  * */
-import Player from '../models/Player';
+import MessageSender from '../distributed_abilities/MessageSender';
+import Player, { InGameStatus } from '../models/Player';
 import { AvatarUrls } from '../utils/Common';
 
 @Component
@@ -29,6 +30,11 @@ export default struct Carousel {
   @State Size: number = 0;
   @State ID: number[] = [];
   @Prop @Watch('onItemsChange') players: Player[] = [];
+  // 是否显示投票
+  @Link startVoteFlag: boolean;
+  // 主机的networkId
+  @Prop hostNetworkId: string;
+  @Link localPlayer: Player;
 
   private panOption: PanGestureOptions = new PanGestureOptions({ direction: PanDirection.Left | PanDirection.Right });
 
@@ -64,6 +70,7 @@ export default struct Carousel {
       this.onSwipe();
     }
     this.Angle = 0;
+    this.frontID = 0;
   }
 
   // 根据主角度计算所有变量
@@ -89,6 +96,16 @@ export default struct Carousel {
 
   build() {
     Column() {
+      if (this.startVoteFlag) {
+        Button('投票')
+          .backgroundColor($r('app.color.button_background'))
+          .onClick(() => {
+            this.localPlayer.setInGameStatus(InGameStatus.Voted);
+            // 向主机发送投票信息
+            MessageSender.sendVoteMessage(this.hostNetworkId, this.players[this.frontID].getNetworkId());
+            this.startVoteFlag = false;
+          })
+      }
       Row() {
         this.buildGraphList()
       }
@@ -99,7 +116,7 @@ export default struct Carousel {
           .onActionStart((event: GestureEvent) => {
           })
           .onActionUpdate((event: GestureEvent) => {
-            this.Angle -= event.offsetX / 2;
+            this.Angle -= event.offsetX / 4;
           })
           .onActionEnd(() => {
             // 找到最近的角度，进行自动复位
@@ -209,7 +226,7 @@ struct Graph {
         Text(this.player.getPlayerName().length === 0 ? '玩家' : this.player.getPlayerName())
           .width('100%')
           .fontSize(16)
-          .fontWeight(FontWeight.Bold)
+          .fontWeight(FontWeight.Bolder)
           .fontStyle(FontStyle.Italic)
           .maxLines(1)
           .textOverflow({overflow: TextOverflow.Ellipsis})
@@ -230,9 +247,9 @@ struct Graph {
       else {
         Text(this.player.getRemark())
           .width('100%')
-          .fontSize(12)
+          .fontSize(16)
           .padding(5)
-          .fontWeight(FontWeight.Medium)
+          .fontWeight(FontWeight.Bold)
           .fontStyle(FontStyle.Italic)
       }
     }

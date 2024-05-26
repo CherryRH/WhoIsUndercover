@@ -10,11 +10,11 @@ export default struct GameFooter {
   build() {
     Column() {
       Divider()
-      Row() {
+      Row({space: 10}) {
         if (this.localPlayer.getRole() === RoleType.Unknown) {
           Text('等待职业分配')
             .titleFont()
-            .fontSize(16)
+            .fontSize(12)
             .fontColor(Color.Blue)
         }
         else if (this.localPlayer.getRole() === RoleType.Undercover) {
@@ -29,8 +29,18 @@ export default struct GameFooter {
             .fontSize(24)
             .fontColor(Color.Black)
         }
+        Text('被投票数：' + this.localPlayer.getVotes())
+          .width('30%')
+          .height('70%')
+          .fontSize(20)
+          .fontColor(Color.White)
+          .fontWeight(FontWeight.Bolder)
+          .fontStyle(FontStyle.Italic)
+          .backgroundColor(Color.Gray)
+          .borderRadius(10)
+          .shadow({color: Color.White, radius: 5, offsetX: 10, offsetY: 5})
         Text('你的词语：' + this.localPlayer.getWord())
-          .width('60%')
+          .width('40%')
           .height('70%')
           .fontSize(20)
           .fontColor(Color.White)
@@ -53,7 +63,7 @@ export default struct GameFooter {
 
 @Extend(Text)
 function titleFont() {
-  .width('30%')
+  .width('20%')
   .fontWeight(FontWeight.Bolder)
   .fontStyle(FontStyle.Italic)
 }

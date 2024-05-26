@@ -60,6 +60,24 @@ export default class EntryAbility extends UIAbility {
         MessageReceiver.dealMessage(newMessage);
         console.log('testTag', `Receive message ${want.parameters.message.toString()} from ${want.parameters.sender.toString()}`);
       }
+      else if (want.parameters.tag === 'RemarkMessage') {
+        let newMessage: Message = new Message(
+          want.parameters.message.toString(),
+          want.parameters.sender.toString(),
+          want.parameters.tag.toString()
+        );
+        MessageReceiver.dealMessage(newMessage);
+        console.log('testTag', `Receive message ${want.parameters.message.toString()} from ${want.parameters.sender.toString()}`);
+      }
+      else if (want.parameters.tag === 'VoteMessage') {
+        let newMessage: Message = new Message(
+          want.parameters.message.toString(),
+          want.parameters.sender.toString(),
+          want.parameters.tag.toString()
+        );
+        MessageReceiver.dealMessage(newMessage);
+        console.log('testTag', `Receive message ${want.parameters.message.toString()} from ${want.parameters.sender.toString()}`);
+      }
       else if (want.parameters.tag === 'PlayerInfoMessage') {
         let playerInfoMessage: PlayerInfoMessage = new PlayerInfoMessage(
           want.parameters.playerName.toString(),

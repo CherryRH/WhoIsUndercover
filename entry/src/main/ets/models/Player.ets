@@ -128,6 +128,11 @@ export default class Player {
     this.allVotes = allVotes;
   }
 
+  public beVoted() {
+    this.votes++;
+    this.allVotes++;
+  }
+
   public getRemark(): string {
     return this.remark;
   }

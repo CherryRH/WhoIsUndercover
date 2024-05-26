@@ -66,7 +66,32 @@ export default class MessageSender {
 
   // 发送评论信息
   static sendRemarkMessage(networkId: string, remark: string) {
-    
+    let want: Want = {
+      deviceId: networkId,
+      bundleName: BUNDLE_NAME,
+      abilityName: 'EntryAbility',
+      parameters: {
+        tag: 'RemarkMessage',
+        message: remark,
+        sender: DistributedDeviceManager.localDeviceInfo.networkId!
+      }
+    }
+    MessageSender.sendWant(want);
+  }
+
+  // 发送投票信息
+  static sendVoteMessage(networkId: string, vote: string) {
+    let want: Want = {
+      deviceId: networkId,
+      bundleName: BUNDLE_NAME,
+      abilityName: 'EntryAbility',
+      parameters: {
+        tag: 'VoteMessage',
+        message: vote,
+        sender: DistributedDeviceManager.localDeviceInfo.networkId!
+      }
+    }
+    MessageSender.sendWant(want);
   }
 
   // 发送玩家信息
