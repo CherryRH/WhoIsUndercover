@@ -28,7 +28,8 @@ struct HallPage {
   @State hostNetworkId: string = '';
 
   async onPageShow() {
-    DistributedDeviceManager.getAvailableDeviceListSync()
+    DistributedDeviceManager.getAvailableDeviceListSync();
+
     this.deviceInfoList = DistributedDeviceManager.availableDeviceList;
     // 注册接收信息的回调
     MessageReceiver.onReceiveMessage('GameMessage', (message: Message | PlayerInfoMessage) => {

@@ -23,7 +23,7 @@ export default class EntryAbility extends UIAbility {
   async onCreate(want: Want, launchParam: AbilityConstant.LaunchParam) {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onCreate');
 
-    //设置屏幕常亮
+    // 设置屏幕常亮
     let thisWindow = await window.getLastWindow(this.context);
     thisWindow.setWindowKeepScreenOn(true);
 

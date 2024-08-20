@@ -156,7 +156,6 @@ export class DistributedDeviceManager {
           bindType: 1,
           targetPkgName: BUNDLE_NAME,
           appName: 'WhoIsUndercover',
-
         },
         (err, data) => {
           if (err) {

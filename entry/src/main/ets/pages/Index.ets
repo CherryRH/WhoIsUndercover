@@ -17,7 +17,7 @@ const tag: string = 'TestTag [Index]:';
 @Component
 struct Index {
   // 玩家名称
-  @State playerName: string = 'Player';
+  @State playerName: string = '';
   // 玩家头像
   @State avatar: number = 0;
   // 累计获胜次数
@@ -164,8 +164,8 @@ struct Index {
               }
               await this.savePlayer();
               // 获取本地设备信息
-              DistributedDeviceManager.getLocalDeviceInfo();
-              this.localPlayer.setNetworkId(DistributedDeviceManager.localDeviceInfo.networkId!);
+              // DistributedDeviceManager.getLocalDeviceInfo();
+              // this.localPlayer.setNetworkId(DistributedDeviceManager.localDeviceInfo.networkId!);
               toHallPage();
             })
         }
